@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type 2 Diabetes Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fcfafa 0%, #fcfafa 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            color: black;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            color: black;
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: #007bff;
+            color: white;
+            padding: 20px 30px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .form-content {
+            padding: 35px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .required {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-predict {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-predict:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #545b62;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .result-details {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .probability-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .probability-fill {
+            height: 100%;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .interpretation-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+
+        .interpretation-header {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .interpretation-header::before {
+            content: "🔍";
+            font-size: 1.3em;
+        }
+
+        /* LLM Explanation Section */
+        .llm-explanation-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, #cccbceff 100%);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .llm-explanation-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color:black
+        }
+
+        .llm-explanation-header::before {
+            content: "";
+            font-size: 1.4em;
+        }
+
+        .llm-explanation-content {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 25px;
+            border-radius: 10px;
+            line-height: 1.8;
+            font-size: 1.05em;
+            white-space: pre-line;
+        }
+
+        .llm-explanation-content strong {
+            color: #8c97c7ff;
+            font-weight: 700;
+        }
+
+        .llm-explanation-content h3 {
+            color: #8c97c7ff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* SHAP Values Section */
+        .shap-values-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+
+        .shap-header {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shap-header::before {
+            content: "";
+            font-size: 1.3em;
+        }
+
+        .shap-values-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .shap-value-badge {
+            background: #f8f9fa;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .shap-value-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .shap-positive {
+            border-color: #dc3545;
+            background: #fff5f5;
+            color: #dc3545;
+        }
+
+        .shap-negative {
+            border-color: #28a745;
+            background: #f0fff4;
+            color: #28a745;
+        }
+
+        .shap-feature-name {
+            font-size: 0.9em;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .shap-value-number {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #007bff;
+            font-size: 1.1em;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Type 2 Diabetes Prediction System</h1>
+            <p>AI-powered prediction with Biomistral LLM explanations</p>
+        </div>
+
+        <div class="form-container">
+            <div class="form-header">
+                Patient Information
+            </div>
+
+            <div class="form-content">
+                <form id="predictionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Gender <span class="required">*</span></label>
+                            <select name="gender" id="gender" required>
+                                <option value=""></option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Age <span class="required">*</span></label>
+                            <input type="number" name="age" id="age" required min="1" max="120" step="1">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hypertension <span class="required">*</span></label>
+                            <select name="hypertension" id="hypertension" required>
+                                <option value=""></option>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Heart Disease <span class="required">*</span></label>
+                            <select name="heart_disease" id="heart_disease" required>
+                                <option value=""></option>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Smoking History <span class="required">*</span></label>
+                            <select name="smoking_history" id="smoking_history" required>
+                                <option value=""></option>
+                                <option value="never">Never</option>
+                                <option value="current">Current</option>
+                                <option value="former">Former</option>
+                                <option value="ever">Ever</option>
+                                <option value="No Info">No Info</option>
+                                <option value="not current">Not Current</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>BMI <span class="required">*</span></label>
+                            <input type="number" name="bmi" id="bmi" required step="0.01" placeholder="25.52">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>HbA1c Level (%) <span class="required">*</span></label>
+                            <input type="number" name="HbA1c_level" id="HbA1c_level" required step="0.01" placeholder="5.7">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Blood Glucose Level (mg/dL) <span class="required">*</span></label>
+                            <input type="number" name="blood_glucose_level" id="blood_glucose_level" required step="0.01" placeholder="100">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-predict">Predict Risk</button>
+                        <button type="button" class="btn-reset" onclick="resetForm()">Reset Form</button>
+                    </div>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing patient data with AI...</p>
+                </div>
+
+                <div class="result-container" id="resultContainer">
+                    <div class="result-header" id="resultHeader"></div>
+                    <div class="probability-bar">
+                        <div class="probability-fill" id="probabilityFill" style="width: 0%"></div>
+                    </div>
+                    <div class="result-details" id="resultDetails"></div>
+                    
+                    <!-- SHAP Values Display -->
+                    <div class="shap-values-section" id="shapValuesSection">
+                        <div class="shap-header">
+                            Technical SHAP Values
+                        </div>
+                        <p style="color: #666; margin-bottom: 15px; font-size: 0.95em;">
+                        Contribution of each factor to the prediction:
+                        </p>
+                        <div class="shap-values-list" id="shapValuesList"></div>
+                    </div>
+                    
+                    <!-- Biomistral LLM Explanation -->
+                    <div class="llm-explanation-section" id="llmExplanationSection">
+                        <div class="llm-explanation-header">
+                        AI-Powered Medical Explanation
+                        </div>
+                        <div class="llm-explanation-content" id="llmExplanationContent">
+                            Loading AI explanation...
+                        </div>
+                    </div>
+
+                    <!-- Technical Details section removed as per user request -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resetForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            
+            const formInputs = document.querySelectorAll('input, select');
+            formInputs.forEach(input => {
+                input.style.borderColor = '#e0e0e0';
+            });
+        }
+
+        window.addEventListener('load', function() {
+            resetForm();
+        });
+
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            let allFieldsFilled = true;
+            
+            const requiredFields = [
+                {id: 'gender', name: 'Gender'},
+                {id: 'age', name: 'Age'},
+                {id: 'hypertension', name: 'Hypertension'},
+                {id: 'heart_disease', name: 'Heart Disease'},
+                {id: 'smoking_history', name: 'Smoking History'},
+                {id: 'bmi', name: 'BMI'},
+                {id: 'HbA1c_level', name: 'HbA1c Level'},
+                {id: 'blood_glucose_level', name: 'Blood Glucose Level'}
+            ];
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element.value;
+                
+                if (!value || value === '' || value === null) {
+                    allFieldsFilled = false;
+                    element.style.borderColor = '#dc3545';
+                } else {
+                    element.style.borderColor = '#e0e0e0';
+                }
+            });
+            
+            if (!allFieldsFilled) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('An error occurred: ' + error.message);
+                console.error('Prediction error:', error);
+            }
+        });
+
+        function displayResults(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            const resultHeader = document.getElementById('resultHeader');
+            const resultDetails = document.getElementById('resultDetails');
+            const probabilityFill = document.getElementById('probabilityFill');
+            const shapValuesList = document.getElementById('shapValuesList');
+            const llmContent = document.getElementById('llmExplanationContent');
+            
+            resultContainer.style.display = 'block';
+            resultContainer.style.background = result.risk_color + '15';
+            resultContainer.style.border = '2px solid ' + result.risk_color;
+            
+            resultHeader.textContent = result.risk_level + ' Risk';
+            resultHeader.style.color = result.risk_color;
+            
+            probabilityFill.style.width = result.probability + '%';
+            probabilityFill.style.background = result.risk_color;
+            probabilityFill.textContent = result.probability + '%';
+            
+            const predictionText = result.prediction === 1 ? 
+                'Diabetic' : 'Non-diabetic';
+            
+            resultDetails.innerHTML = `
+                <strong>Prediction:</strong> ${predictionText} (${result.probability}% probability)<br>
+                <strong>Risk Level:</strong> ${result.risk_level}
+            `;
+
+            // Display SHAP Values
+            if (result.top_factors && result.top_factors.length > 0) {
+                shapValuesList.innerHTML = result.top_factors.map(factor => {
+                    const shapValue = factor.shap_value || 0;
+                    const isPositive = shapValue >= 0;
+                    const badgeClass = isPositive ? 'shap-positive' : 'shap-negative';
+                    const sign = shapValue >= 0 ? '+' : '';
+                    
+                    return `
+                        <div class="shap-value-badge ${badgeClass}">
+                            <span class="shap-feature-name">${factor.feature}</span>
+                            <span class="shap-value-number">${sign}${shapValue.toFixed(2)}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                shapValuesList.innerHTML = '<p style="color: #666;">No SHAP data available.</p>';
+            }
+
+            // Display LLM Explanation
+            if (result.llm_explanation) {
+                llmContent.innerHTML = formatLLMExplanation(result.llm_explanation);
+            } else {
+                llmContent.textContent = 'No AI explanation available.';
+            }
+
+            // Scroll to results
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function formatLLMExplanation(text) {
+            // Format the LLM explanation with better readability
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/###\s*(.*?)(\n|$)/g, '<h3>$1</h3>');
+            text = text.replace(/##\s*(.*?)(\n|$)/g, '<h3>$1</h3>');
+            text = text.replace(/\n\n/g, '<br><br>');
+            return text;
+        }
+
+        const formInputs = document.querySelectorAll('input, select');
+        formInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.style.borderColor = '#e0e0e0';
+            });
+        });
+    </script>
+</body>
+</html>
